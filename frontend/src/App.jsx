@@ -190,7 +190,7 @@ function CesiumGlobe({ regions, selected, onSelect, rotating, pointPicking, onEx
       setViewerReady(true)
       setViewerError(false)
       availabilityCallback.current?.(true)
-      v.scene.globe.enableLighting = true
+      v.scene.globe.enableLighting = !isMobile
       v.scene.globe.showGroundAtmosphere = true
       if (isMobile) v.scene.globe.maximumScreenSpaceError = 4
       v.scene.backgroundColor = Cesium.Color.fromCssColorString('#050a1c')
