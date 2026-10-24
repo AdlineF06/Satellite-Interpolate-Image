@@ -1,6 +1,6 @@
 {
   "name": "satinterp-ui", "private": true, "version": "1.0.0", "type": "module",
-  "scripts": { "dev": "vite", "build": "vite build" },
+  "scripts": { "dev": "vite", "build": "node ./node_modules/vite/bin/vite.js build" },
   "dependencies": { "cesium": "^1.131.0", "react": "^18.3.1", "react-dom": "^18.3.1", "react-globe.gl": "^2.27.2" },
   "devDependencies": { "@vitejs/plugin-react": "^4.3.1", "vite": "^5.4.0", "vite-plugin-static-copy": "^2.3.2" }
 }
