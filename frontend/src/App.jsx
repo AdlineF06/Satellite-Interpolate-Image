@@ -144,8 +144,10 @@ function CesiumGlobe({ regions, selected, onSelect, rotating, pointPicking, onEx
   const availabilityCallback = useRef(onAvailabilityChange)
   const pointPickingState = useRef(pointPicking)
   const exactPointCallback = useRef(onExactPointSelected)
+  const imageryErrorHandler = useRef(null)
   const [viewerReady, setViewerReady] = useState(false)
   const [viewerError, setViewerError] = useState(false)
+  const [imageryError, setImageryError] = useState('')
   const [earthStyle, setEarthStyle] = useState('aerial')
 
   useEffect(() => { selectCallback.current = onSelect }, [onSelect])
@@ -166,6 +168,15 @@ function CesiumGlobe({ regions, selected, onSelect, rotating, pointPicking, onEx
       window.Cesium = Cesium
       Cesium.Ion.defaultAccessToken = token.current
       const imagery = await Cesium.IonImageryProvider.fromAssetId(2)
+      const reportImageryError = (error) => {
+        console.error('Cesium imagery tile failed to load', error)
+        const message = String(error?.message || 'imagery tile request failed')
+          .replaceAll(token.current, '[redacted]')
+          .slice(0, 180)
+        setImageryError(message)
+      }
+      imageryErrorHandler.current = reportImageryError
+      imagery.errorEvent.addEventListener(reportImageryError)
       const isMobile = window.matchMedia('(max-width: 600px)').matches
       const v = new Cesium.Viewer(host.current, {
         animation: false, baseLayerPicker: false, fullscreenButton: false,
@@ -260,7 +271,8 @@ function CesiumGlobe({ regions, selected, onSelect, rotating, pointPicking, onEx
       try {
         const provider = await window.Cesium.IonImageryProvider.fromAssetId(styles[earthStyle])
         if (cancelled || v.isDestroyed()) return
-        provider.errorEvent.addEventListener((error) => console.error(`Could not load ${earthStyle} imagery tile`, error))
+        setImageryError('')
+        if (imageryErrorHandler.current) provider.errorEvent.addEventListener(imageryErrorHandler.current)
         v.imageryLayers.removeAll()
         v.imageryLayers.addImageryProvider(provider)
       } catch (e) {
@@ -279,6 +291,7 @@ function CesiumGlobe({ regions, selected, onSelect, rotating, pointPicking, onEx
         <option value="aerial">Aerial imagery</option><option value="sentinel">Sentinel satellite</option><option value="street">Street map</option>
       </select>
     </label>
+    {imageryError && <p className="imagery-error">Earth imagery failed to load: {imageryError}</p>}
   </>
 }
 
