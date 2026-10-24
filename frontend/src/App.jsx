@@ -166,10 +166,12 @@ function CesiumGlobe({ regions, selected, onSelect, rotating, pointPicking, onEx
       window.Cesium = Cesium
       Cesium.Ion.defaultAccessToken = token.current
       const imagery = await Cesium.IonImageryProvider.fromAssetId(2)
+      const isMobile = window.matchMedia('(max-width: 600px)').matches
       const v = new Cesium.Viewer(host.current, {
         animation: false, baseLayerPicker: false, fullscreenButton: false,
         geocoder: false, homeButton: false, infoBox: false, sceneModePicker: false,
         selectionIndicator: false, timeline: false, navigationHelpButton: false,
+        resolutionScale: isMobile ? 0.65 : 1,
         baseLayer: new Cesium.ImageryLayer(imagery),
       })
       if (!alive) { v.destroy(); return }
@@ -179,6 +181,7 @@ function CesiumGlobe({ regions, selected, onSelect, rotating, pointPicking, onEx
       availabilityCallback.current?.(true)
       v.scene.globe.enableLighting = true
       v.scene.globe.showGroundAtmosphere = true
+      if (isMobile) v.scene.globe.maximumScreenSpaceError = 4
       v.scene.backgroundColor = Cesium.Color.fromCssColorString('#050a1c')
       v.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(80, 20, 19000000) })
       const pins = new Map()
@@ -257,6 +260,7 @@ function CesiumGlobe({ regions, selected, onSelect, rotating, pointPicking, onEx
       try {
         const provider = await window.Cesium.IonImageryProvider.fromAssetId(styles[earthStyle])
         if (cancelled || v.isDestroyed()) return
+        provider.errorEvent.addEventListener((error) => console.error(`Could not load ${earthStyle} imagery tile`, error))
         v.imageryLayers.removeAll()
         v.imageryLayers.addImageryProvider(provider)
       } catch (e) {
