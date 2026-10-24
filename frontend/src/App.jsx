@@ -178,6 +178,7 @@ function CesiumGlobe({ regions, selected, onSelect, rotating, pointPicking, onEx
       imageryErrorHandler.current = reportImageryError
       imagery.errorEvent.addEventListener(reportImageryError)
       const isMobile = window.matchMedia('(max-width: 600px)').matches
+      const orbitAltitude = isMobile ? 12000000 : 19000000
       const v = new Cesium.Viewer(host.current, {
         animation: false, baseLayerPicker: false, fullscreenButton: false,
         geocoder: false, homeButton: false, infoBox: false, sceneModePicker: false,
@@ -194,7 +195,7 @@ function CesiumGlobe({ regions, selected, onSelect, rotating, pointPicking, onEx
       v.scene.globe.showGroundAtmosphere = true
       if (isMobile) v.scene.globe.maximumScreenSpaceError = 4
       v.scene.backgroundColor = Cesium.Color.fromCssColorString('#050a1c')
-      v.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(80, 20, 19000000) })
+      v.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(80, 20, orbitAltitude) })
       const pins = new Map()
       const drawPins = () => {
         for (const [id, entity] of pins) { v.entities.remove(entity); pins.delete(id) }
@@ -259,7 +260,10 @@ function CesiumGlobe({ regions, selected, onSelect, rotating, pointPicking, onEx
     if (!v) return
     v.clock.shouldAnimate = rotating && !selected
     if (selected) v.camera.flyTo({ destination: window.Cesium?.Cartesian3?.fromDegrees(selected.lng, selected.lat, 2200000), duration: 2 })
-    else v.camera.flyTo({ destination: window.Cesium?.Cartesian3?.fromDegrees(80, 20, 19000000), duration: 1.8 })
+    else {
+      const orbitAltitude = window.matchMedia('(max-width: 600px)').matches ? 12000000 : 19000000
+      v.camera.flyTo({ destination: window.Cesium?.Cartesian3?.fromDegrees(80, 20, orbitAltitude), duration: 1.8 })
+    }
   }, [selected, rotating, viewerReady])
 
   useEffect(() => {
