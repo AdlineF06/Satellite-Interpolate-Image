@@ -298,7 +298,8 @@ export default function App() {
   const [imageModal, setImageModal] = useState(false)
   const [dashboardOpen, setDashboardOpen] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const touchStartX = useRef(0)
+  const edgeSwipeStartX = useRef(0)
+  const sidebarSwipeStartX = useRef(0)
 
   useEffect(() => { getRegions().then(setRegions).catch(() => setErr('Backend not reachable. Start it on port 8001.')) }, [])
   useEffect(() => {
@@ -336,13 +337,7 @@ export default function App() {
   const validRequestedTimes = selectedMillis.every(Number.isFinite) && selectedMillis[0] < selectedMillis[1] && selectedMillis[1] < selectedMillis[2] && selectedMillis[2] - selectedMillis[0] <= 120 * 60000
   const validPoint = Number.isFinite(sel?.lat) && Number.isFinite(sel?.lng) && sel.lat >= -90 && sel.lat <= 90 && sel.lng >= -180 && sel.lng <= 180
 
-  return <div className={'app' + (dashboardOpen ? ' dashboard-open' : '') + (mobileSidebarOpen ? ' mobile-sidebar-open' : '')}
-    onTouchStart={(event) => { touchStartX.current = event.touches[0].clientX }}
-    onTouchEnd={(event) => {
-      const deltaX = event.changedTouches[0].clientX - touchStartX.current
-      if (!mobileSidebarOpen && touchStartX.current < 28 && deltaX > 70) setMobileSidebarOpen(true)
-      else if (mobileSidebarOpen && touchStartX.current < 380 && deltaX < -70) setMobileSidebarOpen(false)
-    }}>
+  return <div className={'app' + (dashboardOpen ? ' dashboard-open' : '') + (mobileSidebarOpen ? ' mobile-sidebar-open' : '')}>
     <div className="globe"><CesiumGlobe regions={regions} selected={sel} onSelect={pick} rotating={rotating} pointPicking={pointPicking} onExactPointSelected={chooseExactPoint} onAvailabilityChange={setGlobeAvailable} /></div>
     <div className="frame">
       <header><b className="logo">◉ Orbit Interpolator</b><div className="header-actions">
@@ -352,7 +347,16 @@ export default function App() {
 
       <button className="dashboard-scrim" onClick={() => setDashboardOpen(false)} aria-label="Close full-screen dashboard" />
       <button className="mobile-sidebar-scrim" onClick={() => setMobileSidebarOpen(false)} aria-label="Close area menu" />
-      <aside className="area-sidebar">
+      <div className="mobile-edge-swipe" aria-hidden="true"
+        onTouchStart={(event) => { edgeSwipeStartX.current = event.touches[0].clientX }}
+        onTouchEnd={(event) => {
+          if (event.changedTouches[0].clientX - edgeSwipeStartX.current > 55) setMobileSidebarOpen(true)
+        }} />
+      <aside className="area-sidebar"
+        onTouchStart={(event) => { sidebarSwipeStartX.current = event.touches[0].clientX }}
+        onTouchEnd={(event) => {
+          if (event.changedTouches[0].clientX - sidebarSwipeStartX.current < -55) setMobileSidebarOpen(false)
+        }}>
         <div className="sidebar-heading"><div><span className="eyebrow">SATELLITE WORKSPACE</span><h1>{sel ? 'Selected area' : 'Explore Earth'}</h1></div>
           <div className="heading-actions">{sel && <button className="link" onClick={back}>All areas</button>}<button className="dashboard-toggle" onClick={() => setDashboardOpen((open) => !open)} aria-expanded={dashboardOpen}>{dashboardOpen ? 'Close' : 'Full screen'}<span aria-hidden="true">{dashboardOpen ? ' ↙' : ' ↗'}</span></button></div></div>
         <p className="sidebar-copy">Search storm regions, select an area, then generate an interpolated satellite frame.</p>
