@@ -297,6 +297,7 @@ export default function App() {
   const [err, setErr] = useState('')
   const [imageModal, setImageModal] = useState(false)
   const [dashboardOpen, setDashboardOpen] = useState(false)
+  const [mobileGlobeOpen, setMobileGlobeOpen] = useState(() => window.matchMedia('(max-width: 600px)').matches)
 
   useEffect(() => { getRegions().then(setRegions).catch(() => setErr('Backend not reachable. Start it on port 8001.')) }, [])
   useEffect(() => {
@@ -334,10 +335,11 @@ export default function App() {
   const validRequestedTimes = selectedMillis.every(Number.isFinite) && selectedMillis[0] < selectedMillis[1] && selectedMillis[1] < selectedMillis[2] && selectedMillis[2] - selectedMillis[0] <= 120 * 60000
   const validPoint = Number.isFinite(sel?.lat) && Number.isFinite(sel?.lng) && sel.lat >= -90 && sel.lat <= 90 && sel.lng >= -180 && sel.lng <= 180
 
-  return <div className={'app' + (dashboardOpen ? ' dashboard-open' : '')}>
+  return <div className={'app' + (dashboardOpen ? ' dashboard-open' : '') + (mobileGlobeOpen ? ' mobile-globe-open' : '')}>
     <div className="globe"><CesiumGlobe regions={regions} selected={sel} onSelect={pick} rotating={rotating} pointPicking={pointPicking} onExactPointSelected={chooseExactPoint} onAvailabilityChange={setGlobeAvailable} /></div>
     <div className="frame">
       <header><b className="logo">◉ Orbit Interpolator</b><div className="header-actions">
+        <button className="toggle mobile-view-toggle" onClick={() => setMobileGlobeOpen((open) => !open)}>{mobileGlobeOpen ? 'Choose area' : 'View Earth'}</button>
         <button className="toggle" onClick={() => setRotating((v) => !v)} disabled={!globeAvailable}>{rotating ? 'Pause orbit' : 'Resume orbit'}</button>
         <span className="ion-badge">CESIUM ION</span></div></header>
 
